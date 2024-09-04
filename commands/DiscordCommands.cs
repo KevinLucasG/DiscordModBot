@@ -51,5 +51,119 @@ namespace DiscordBot.commands
                 await ctx.Channel.SendMessageAsync($"Ocorreu um erro ao tentar banir {member.DisplayName}: {ex.Message}");
             }
         }
+
+
+        //!kick @UsuárioOfensivo [razão opcional]
+        [Command ("kick")]
+        public async Task KickUser(DiscordMember member, CommandContext ctx, [RemainingText] string reason = "Sem razão especificada") 
+        {
+            if (!ctx.Member.Permissions.HasFlag(DSharpPlus.Permissions.BanMembers))
+            {
+                await ctx.RespondAsync("Você não tem permissão para expulsar membros.");
+                return;
+            }
+            if (member == ctx.Member)
+            {
+                await ctx.RespondAsync("Você não pode se expulsar.");
+                return;
+            }
+            if (member == ctx.Guild.Owner)
+            {
+                await ctx.RespondAsync("Você não pode expulsar o dono do servidor.");
+                return;
+            }
+
+            try
+            {
+                await member.RemoveAsync(reason: reason);
+                await ctx.Channel.SendMessageAsync($"{member.DisplayName} foi expulso com sucesso. Razão: {reason}");
+            }
+            catch(Exception ex)
+            {
+                await ctx.Channel.SendMessageAsync($"Ocorreu um erro ao tentar expulsar o {member.DisplayName}: {ex.Message}");
+            }
+
+
+        }
+
+        [Command ("mute")]
+
+
+        //!mute @UsuárioOfensivo 00:10 Razão opcional
+        public async Task MuterUser(CommandContext ctx, DiscordMember member, TimeSpan duration, [RemainingText] string reason = "Sem razão especificada")
+        {
+            if (!ctx.Member.Permissions.HasFlag(DSharpPlus.Permissions.ManageRoles))
+            {
+                await ctx.RespondAsync("Você não tem permissão para mutar membros.");
+                return;
+            }
+
+            if (member == ctx.Member)
+            {
+                await ctx.RespondAsync("Você não pode se mutar.");
+                return;
+            }
+
+    
+            if (member == ctx.Guild.Owner)
+            {
+                await ctx.RespondAsync("Você não pode mutar o dono do servidor.");
+                return;
+            }
+
+            // Encontra o cargo "Muted"
+            var muteRole = ctx.Guild.Roles.Values.FirstOrDefault(role => role.Name.ToLower() == "muted");
+
+            if (muteRole == null)
+            {
+                await ctx.RespondAsync("Cargo de Mutado não encontrado. Por favor, crie um cargo chamado 'Muted' e configure-o corretamente.");
+                return;
+            }
+
+            try
+            {
+                await member.GrantRoleAsync(muteRole);
+                await ctx.Channel.SendMessageAsync($"{member.DisplayName} foi mutado por {duration.TotalMinutes} minutos. Razão: {reason}");
+
+                await Task.Delay(duration);
+                await member.RevokeRoleAsync(muteRole);
+                await ctx.Channel.SendMessageAsync($"{member.DisplayName} foi desmutado após {duration.TotalMinutes} minutos.");
+            }
+            catch (Exception ex)
+            {
+                await ctx.Channel.SendMessageAsync($"Ocorreu um erro ao tentar mutar {member.DisplayName}: {ex.Message}");
+            }
+        }
+
+        [Command("unmute")]
+        public async Task UnmuteUser(CommandContext ctx, DiscordMember member)
+        {
+
+            if (!ctx.Member.Permissions.HasFlag(DSharpPlus.Permissions.ManageRoles))
+            {
+                await ctx.RespondAsync("Você não tem permissão para desmutar membros.");
+                return;
+            }
+
+            // Encontra o cargo "Muted"
+            var muteRole = ctx.Guild.Roles.Values.FirstOrDefault(role => role.Name.ToLower() == "muted");
+
+
+            if (muteRole == null)
+            {
+                await ctx.RespondAsync("Cargo de Mutado não encontrado. Por favor, crie um cargo chamado 'Muted' e configure-o corretamente.");
+                return;
+            }
+
+            try
+            {
+                await member.RevokeRoleAsync(muteRole);
+                await ctx.Channel.SendMessageAsync($"{member.DisplayName} foi desmutado");
+            }
+            catch(Exception ex)
+            {
+                await ctx.Channel.SendMessageAsync($"Ocorreu um erro ao tentar desmutar {member.DisplayName}: {ex.Message}");
+            }
+        }
     }
 }
