@@ -17,7 +17,7 @@ namespace DiscordBot.commands
             await ctx.Channel.SendMessageAsync($"Olá {ctx.User.Username}, como poso lhe ajudar? ");
         }
 
-        [Command("!ban")]
+        [Command("ban")]
         public async Task BanUser(CommandContext ctx, DiscordMember member, [RemainingText] string reason = "Sem razão especificada")
         {
             // Verifica se o usuário que está executando o comando tem permissão para banir
@@ -43,6 +43,7 @@ namespace DiscordBot.commands
             // Tenta banir o usuário
             try
             {
+                await member.SendMessageAsync($"Devido às suas ações ou por ter quebrado as regras, tivemos que lhe banir. Razão: {reason}");
                 await member.BanAsync(reason: reason);
                 await ctx.Channel.SendMessageAsync($"{member.DisplayName} foi banido com sucesso. Razão: {reason}");
             }
@@ -54,8 +55,8 @@ namespace DiscordBot.commands
 
 
         //!kick @UsuárioOfensivo [razão opcional]
-        [Command ("kick")]
-        public async Task KickUser(DiscordMember member, CommandContext ctx, [RemainingText] string reason = "Sem razão especificada") 
+        [Command("kick")]
+        public async Task KickUser(DiscordMember member, CommandContext ctx, [RemainingText] string reason = "Sem razão especificada")
         {
             if (!ctx.Member.Permissions.HasFlag(DSharpPlus.Permissions.BanMembers))
             {
@@ -75,10 +76,11 @@ namespace DiscordBot.commands
 
             try
             {
-                await member.RemoveAsync(reason: reason);
+                await member.SendMessageAsync($"Você foi kickado do servidor. Razão: {reason} Esperamos que você possa refletir sobre suas ações e decida voltar ao servidor em um futuro próximo.");
+                await member.RemoveAsync(reason: reason);           
                 await ctx.Channel.SendMessageAsync($"{member.DisplayName} foi expulso com sucesso. Razão: {reason}");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 await ctx.Channel.SendMessageAsync($"Ocorreu um erro ao tentar expulsar o {member.DisplayName}: {ex.Message}");
             }
@@ -86,7 +88,7 @@ namespace DiscordBot.commands
 
         }
 
-        [Command ("mute")]
+        [Command("mute")]
 
 
         //!mute @UsuárioOfensivo 00:10 Razão opcional
@@ -104,7 +106,7 @@ namespace DiscordBot.commands
                 return;
             }
 
-    
+
             if (member == ctx.Guild.Owner)
             {
                 await ctx.RespondAsync("Você não pode mutar o dono do servidor.");
@@ -128,6 +130,7 @@ namespace DiscordBot.commands
                 await Task.Delay(duration);
                 await member.RevokeRoleAsync(muteRole);
                 await ctx.Channel.SendMessageAsync($"{member.DisplayName} foi desmutado após {duration.TotalMinutes} minutos.");
+                
             }
             catch (Exception ex)
             {
@@ -160,10 +163,38 @@ namespace DiscordBot.commands
                 await member.RevokeRoleAsync(muteRole);
                 await ctx.Channel.SendMessageAsync($"{member.DisplayName} foi desmutado");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 await ctx.Channel.SendMessageAsync($"Ocorreu um erro ao tentar desmutar {member.DisplayName}: {ex.Message}");
             }
+
+        }
+        [Command("warn")]
+        public async Task WarnUser(CommandContext ctx, DiscordMember member, [RemainingText] string reason = "Sem razão especificada")
+        {
+            if (!ctx.Member.Permissions.HasFlag(DSharpPlus.Permissions.ManageRoles))
+            {
+                await ctx.RespondAsync("Você não tem permissão para avisar outros membros.");
+                return;
+            }
+
+            if (member == null)
+            {
+                await ctx.RespondAsync("Usuário não encontrado ou inexistente");
+                return;
+            }
+
+            await member.SendMessageAsync($"Você recebeu um aviso no servidor **{ctx.Guild.Name}**. Motivo: {reason}");
+
+
+            // Registra o aviso no chat onde o comando foi usado
+            var embed = new DiscordEmbedBuilder
+            {
+                Title = "Usuário avisado",
+                Description = $"{member.Username}, recebeu um aviso pelo motivo de: {reason} ",
+                Color = DiscordColor.Orange
+            };
+            await ctx.Channel.SendMessageAsync(embed);
         }
     }
 }
