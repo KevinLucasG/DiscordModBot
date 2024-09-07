@@ -10,10 +10,19 @@ using System.Threading.Tasks;
 namespace DiscordBot.commands
 {
     public class DiscordCommands : BaseCommandModule
+
+
+
     {
+       
         [Command("hi")]
         public async Task HelloCommand(CommandContext ctx)
         {
+             if (!ctx.Member.Permissions.HasFlag(DSharpPlus.Permissions.ManageRoles))
+            {
+                await ctx.RespondAsync("Você não tem permissão para utilizar esse bot.");
+                return;
+            }
             await ctx.Channel.SendMessageAsync($"Olá {ctx.User.Username}, como poso lhe ajudar? ");
         }
 
@@ -56,9 +65,9 @@ namespace DiscordBot.commands
 
         //!kick @UsuárioOfensivo [razão opcional]
         [Command("kick")]
-        public async Task KickUser(DiscordMember member, CommandContext ctx, [RemainingText] string reason = "Sem razão especificada")
+        public async Task KickUser(CommandContext ctx, DiscordMember member, [RemainingText] string reason = "Sem razão especificada")
         {
-            if (!ctx.Member.Permissions.HasFlag(DSharpPlus.Permissions.BanMembers))
+            if (!ctx.Member.Permissions.HasFlag(DSharpPlus.Permissions.KickMembers))
             {
                 await ctx.RespondAsync("Você não tem permissão para expulsar membros.");
                 return;
