@@ -26,6 +26,23 @@ namespace DiscordBot.commands
             await ctx.Channel.SendMessageAsync($"Olá {ctx.User.Username}, como poso lhe ajudar? ");
         }
 
+
+        [Command("help")]
+        public async Task HelpCommand(CommandContext ctx)
+        {
+            var sb = new StringBuilder();
+            var commands = ctx.CommandsNext.RegisteredCommands;
+
+            sb.AppendLine("Aqui estão os comandos disponíveis:");
+            foreach (var command in commands)
+            {
+                var description = command.Value.Description ?? "Sem descrição";
+                sb.AppendLine($"- {command.Key}: {description}");
+            }
+
+            await ctx.Channel.SendMessageAsync(sb.ToString());
+        }
+
         [Command("ban")]
         public async Task BanUser(CommandContext ctx, DiscordMember member, [RemainingText] string reason = "Sem razão especificada")
         {
