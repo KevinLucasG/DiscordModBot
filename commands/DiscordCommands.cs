@@ -43,6 +43,26 @@ namespace DiscordBot.commands
             await ctx.Channel.SendMessageAsync(sb.ToString());
         }
 
+        [Command("userinfo")]
+        public async Task UserInfo(CommandContext ctx, DiscordMember member)
+        {
+            var embed = new DiscordEmbedBuilder
+            {
+                Title = $"Informações de {member.DisplayName}",
+                Color = DiscordColor.Blurple
+            };
+
+            embed.WithThumbnail(member.AvatarUrl); // Corrigido aqui
+            embed.AddField("ID do usuário", member.Id.ToString(), true);
+            embed.AddField("Entrou no servidor em", member.JoinedAt.ToString("f"), true);
+            embed.AddField("Cargos", string.Join(", ", member.Roles.Select(r => r.Name)));
+
+            await ctx.Channel.SendMessageAsync(embed);
+        }
+
+
+
+
         [Command("ban")]
         public async Task BanUser(CommandContext ctx, DiscordMember member, [RemainingText] string reason = "Sem razão especificada")
         {
@@ -78,6 +98,28 @@ namespace DiscordBot.commands
                 await ctx.Channel.SendMessageAsync($"Ocorreu um erro ao tentar banir {member.DisplayName}: {ex.Message}");
             }
         }
+
+        [Command("unban")]
+        public async Task UnbanUser(CommandContext ctx, [RemainingText] string userId)
+        {
+            if (!ctx.Member.Permissions.HasFlag(DSharpPlus.Permissions.BanMembers))
+            {
+                await ctx.RespondAsync("Você não tem permissão para desbanir membros.");
+                return;
+            }
+
+            try
+            {
+                var user = await ctx.Client.GetUserAsync(ulong.Parse(userId));
+                await ctx.Guild.UnbanMemberAsync(user);
+                await ctx.Channel.SendMessageAsync($"{user.Username} foi desbanido com sucesso.");
+            }
+            catch (Exception ex)
+            {
+                await ctx.Channel.SendMessageAsync($"Erro ao desbanir o usuário: {ex.Message}");
+            }
+        }
+
 
 
         //!kick @UsuárioOfensivo [razão opcional]
